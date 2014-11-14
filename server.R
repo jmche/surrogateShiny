@@ -29,7 +29,7 @@ shinyServer(function(input, output, session) {
       pvalFilt <- pvalFilt + (surrogateTable$isMutated *2)
       }
     pvalFilt <- factor(pvalFilt)
-    return(data.frame(surrogateTable, pvalFilt = pvalFilt))
+    return(data.frame(ID=surrogateTable$ID, Sample=surrogateTable$Sample, Gene=surrogateTable$Gene, pvalFilt = pvalFilt))
   })
   
   surrGene_tooltip <- function(x){
@@ -58,7 +58,9 @@ shinyServer(function(input, output, session) {
       if(g[1,]$neighbor==1 & g[1,]$isMutated ==1){
         sprintf("%s is mutated in %s, but has no mutated neighbors.", g$Gene, g$Sample)
       }
-      else{sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img>", img, x$ID)}  
+      else{sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
+                   <img src='legend1.jpg' alt='legend' width=500></img>", img, x$ID)
+      }  
        
     }
     else{sprintf("%s has no neighboring mutations for %s.", g$Gene, g$Sample)}
@@ -114,6 +116,7 @@ shinyServer(function(input, output, session) {
       set_options(width= 5 * noGenes, height= 10 * noGenes)
     
   })
+  
   
   #bind to shiny plot
   surrPlot %>% bind_shiny("pvalPlot") 

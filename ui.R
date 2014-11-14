@@ -12,16 +12,7 @@ source("helper.R")
 shinyUI(fluidPage(
   titlePanel("Surrogate Mutation Explorer for Breast Cancer Cell Lines"),
 
-  #sidebarLayout(
-    absolutePanel(id = "controls", 
-                  class = "modal", 
-                  fixed = TRUE, draggable = TRUE, 
-                  #position= "center",
-                  top = 280, left="auto", right = 40, bottom = "auto", style="opacity: 0.8",
-                  width = 300, height = "auto",
-                div(
-                h4("Controls"),
-                helpPopup(title="Surrogate Explorer Help",content = "<p>The control box is draggable if it gets in the way.
+  tags$p(helpPopup(title="Surrogate Explorer Help",content = "<p>The control box is draggable if it gets in the way.
                           <p>Use the slider to adjust the alpha cutoff. <p>
                           Mouse over a box in the p-value matrix to show a tooltip with information of the surrogate
                           mutation. <p>
@@ -31,7 +22,20 @@ shinyUI(fluidPage(
                           was done on pvalues filtered at an alpha of 0.05. Columns can also be sorted by number of alterations within
                           the sample.
                           (both mutations and copy number alterations). Rows also can be sorted by degree, or number of connections
-                          a node has from the HPRD network.", trigger="click"),
+                          a node has from the HPRD network.<p>
+                   For more info, mail Ted Laderas (laderast@ohsu.edu).", trigger="click", placement="bottom"),
+         "Code is available at",  tags$a(href="https://github.com/laderast/surrogateShiny", "github.com/laderast/surrogateShiny")),
+  
+  #sidebarLayout(
+    absolutePanel(id = "controls", 
+                  class = "modal", 
+                  fixed = TRUE, draggable = TRUE, 
+                  #position= "center",
+                  top = 280, left="auto", right = 40, bottom = "auto", style="opacity: 0.8",
+                  width = 300, height = "auto",
+                div(
+                h4("Controls"),
+                
                 sliderInput("pvalSlider", label =h5("Alpha"),
                   min = 0.0003, max = 0.1, value = 0.05),
                 checkboxInput("mutBox", label="Show Genes With Mutations", value=FALSE),
