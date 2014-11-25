@@ -107,7 +107,8 @@ shinyServer(function(input, output, session) {
                  "<b>Sample: </b>",g$Sample, "<br>",
                  "<b>P-value: </b>", g$pvalue, "<br>",
                  "<b>Mutated Neighbors: </b>", g$neighbor, "<br>",
-                 "<b>All Neighbors: </b>", g$degree)
+                 "<b>All Neighbors: </b>", g$degree,
+                 "Graph has been generated in sidebar.")
           
           #sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
           #         <img src='legend1.jpg' alt='legend' width=500></img>", outfile, g$ID)

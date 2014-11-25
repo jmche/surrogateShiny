@@ -40,8 +40,10 @@ shinyUI(fluidPage(
                   width = 300, height = "auto",
                 
                   h5("Surrogate Graph (Click to Enlarge)"),
-                  a(imageOutput("imageNet", width="300px", height="300px"), href="netgraph.svg", 
+                  a(imageOutput("imageNet", width="300px", height="300px"), href="graphView.html", 
                     target="_blank"),  
+                  br(),
+                  img(src='legend1.jpg', width=300),
                   
                 h5("Controls"),
                 
