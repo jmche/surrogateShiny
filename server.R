@@ -8,7 +8,10 @@
 library(shiny)
 library(ggvis)
 library(reshape2)
+library(Rgraphviz)
+load("tcgaResult.RData")
 surrogateTable <- read.delim("surrogate-table.txt")
+geneIntTable <- read.delim("geneIntTable.txt")
 noGenes <- length(table(surrogateTable$Gene))
 noSamples <- length(table(surrogateTable$Sample))
 
@@ -16,8 +19,20 @@ noSamples <- length(table(surrogateTable$Sample))
 levRow <- read.delim("rowOrder.txt", stringsAsFactors=FALSE)
 levCol <- read.delim("colOrder.txt", stringsAsFactors=FALSE)
 
+
 shinyServer(function(input, output, session) {
 
+  plotNetGraphsFromID <- function(ID, gisticCopyCalls=NULL, surrogateResults, 
+                                  intome, fileOut) {
+    #source("~/Code/surrogate/plot-results.R")
+    NodeName <- as.character(surrogateTable[surrogateTable$ID==ID,"NodeName"])
+    Sample <- as.character(surrogateTable[surrogateTable$ID==ID,"Sample"])
+    GeneName <- as.character(surrogateTable[surrogateTable$ID==ID,"Gene"])
+    #print(paste(NodeName,Sample))
+    renderSubNetSimple(NodeName, Sample, GeneName, intome, gisticCopyCalls, 
+                       surrogateResults, geneIntTable, fileOut)
+  }
+  
   ##surrTable is a reactive version of surrogateTable
   surrTable <- reactive({
     #input$pvalSlider
@@ -29,7 +44,8 @@ shinyServer(function(input, output, session) {
       pvalFilt <- pvalFilt + (surrogateTable$isMutated *2)
       }
     pvalFilt <- factor(pvalFilt)
-    return(data.frame(ID=surrogateTable$ID, Sample=surrogateTable$Sample, Gene=surrogateTable$Gene, pvalFilt = pvalFilt))
+    return(data.frame(ID=surrogateTable$ID, Sample=surrogateTable$Sample, 
+                      Gene=surrogateTable$Gene, pvalFilt = pvalFilt))
   })
   
   surrGene_tooltip <- function(x){
@@ -65,6 +81,43 @@ shinyServer(function(input, output, session) {
     }
     else{sprintf("%s has no neighboring mutations for %s.", g$Gene, g$Sample)}
   }
+
+  
+  surrGraphDynamic_tooltip <- function(x){
+    if(is.null(x)) return(NULL)
+    if(is.null(x$ID)) return(NULL)
+    
+    #img <- paste(x$ID,".svg", sep="")
+    #select the appropriate row of surrogateTable
+    g <- surrogateTable[surrogateTable$ID == x$ID,]
+    
+    g <- g[1,]
+    if(g[1,]$neighbor > 0){ 
+      if(g[1,]$neighbor==1 & g[1,]$isMutated ==1){
+        sprintf("%s is mutated in %s, but has no mutated neighbors.", g$Gene, g$Sample)
+      }
+      else{
+          outfile <- "netgraph.svg"
+          fileOut <- paste("www/", outfile, sep="")
+          plotNetGraphsFromID(g$ID, surrogateResults=tcgaResult, intome=intome,fileOut=fileOut)
+          
+          g <- surrogateTable[surrogateTable$ID == x$ID,]
+          
+          paste0("<b>Gene: </b>", g$Gene, "<br>",
+                 "<b>Sample: </b>",g$Sample, "<br>",
+                 "<b>P-value: </b>", g$pvalue, "<br>",
+                 "<b>Mutated Neighbors: </b>", g$neighbor, "<br>",
+                 "<b>All Neighbors: </b>", g$degree)
+          
+          #sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
+          #         <img src='legend1.jpg' alt='legend' width=500></img>", outfile, g$ID)
+      }  
+      
+    }
+    else{sprintf("%s has no neighboring mutations for %s.", g$Gene, g$Sample)}
+  }
+  
+  
   
   surrPlot <- reactive({
     #select column and row ordering from select boxes
@@ -95,11 +148,20 @@ shinyServer(function(input, output, session) {
       #make the pvalue heatmap by calling layer_rects
       #note that each box has a key that corresponds to ID
       #in surrTable
-      layer_rects(width = band(), height = band(), key := ~ID) %>%
+      layer_rects(width = band(), height = band(), key := ~ID, fill.brush := "green") %>%
       #display information when hovering
       add_tooltip(surrGene_tooltip, "hover") %>%
       #when clicking, display precomputed network graph
-      add_tooltip(surrGraph_tooltip, "click") %>%
+      add_tooltip(surrGraphDynamic_tooltip, "click") %>%    
+      #add_tooltip(surrGraph_tooltip, "click") %>%
+      #brush functionality for summarizing networks
+      #handle_brush(function(items, page_loc, session, ...){
+      #   print(items$ID)
+      #   val <- summarizeNetworks(items$ID, intome, tcgaResult$mutCopyFrames, surrogateTable, geneIntTable)
+      #   print(val)
+         #if(!is.null(val)){
+         #show_tooltip(session, html="<img src='netgraph.svg' alt = 'summary graph' width = 500 height = 500></img>")}
+      #}) %>%
       #define the sample axis
       add_axis("x", properties = axis_props(labels = list(angle = 90)), orient="top", 
                title_offset = 80, tick_padding=30) %>%
@@ -117,9 +179,19 @@ shinyServer(function(input, output, session) {
     
   })
   
-  
   #bind to shiny plot
   surrPlot %>% bind_shiny("pvalPlot") 
+
+  #poll www/netgraph.svg to see if the netgraph is updated
+  svgGraph <- reactiveFileReader(1000, session, 'www/netgraph.svg', 
+                                 function(x) {return("www/netgraph.svg")})
+  
+  output$imageNet <- renderImage({
+    list(src = svgGraph(),
+         contentType = "image/svg+xml"
+         ) 
+  },deleteFile=FALSE)
+  
   
   
 })

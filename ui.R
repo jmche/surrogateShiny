@@ -7,7 +7,12 @@
 
 library(shiny)
 library(ggvis)
+library(Rgraphviz)
+library(graph)
+library(gplots)
+file.remove("www/netgraph.svg")
 source("helper.R")
+source("plot-results.R")
 
 shinyUI(fluidPage(
   titlePanel("Surrogate Mutation Explorer for Breast Cancer Cell Lines"),
@@ -33,16 +38,20 @@ shinyUI(fluidPage(
                   #position= "center",
                   top = 280, left="auto", right = 40, bottom = "auto", style="opacity: 0.8",
                   width = 300, height = "auto",
-                div(
-                h4("Controls"),
                 
-                sliderInput("pvalSlider", label =h5("Alpha"),
-                  min = 0.0003, max = 0.1, value = 0.05),
+                  h5("Surrogate Graph (Click to Enlarge)"),
+                  a(imageOutput("imageNet", width="300px", height="300px"), href="netgraph.svg", 
+                    target="_blank"),  
+                  
+                h5("Controls"),
+                
+                sliderInput("pvalSlider", label =h6("Alpha"),
+                  min = 0.0001, max = 0.1, value = 0.05, step = 0.01),
                 checkboxInput("mutBox", label="Show Genes With Mutations", value=FALSE),
-                selectInput("selectCols", label = h5("Order columns"), 
+                selectInput("selectCols", label = h6("Order columns"), 
                             choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
                                            "Total Alterations (decreasing)" = 3), selected = 1),
-                selectInput("selectRows", label = h5("Order rows"), 
+                selectInput("selectRows", label = h6("Order rows"), 
                             choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
                                            "Node Degree" = 3), 
                             selected = 1)
@@ -50,7 +59,7 @@ shinyUI(fluidPage(
                 #checkboxInput("clusterColumns", label=h4("Cluster Columns"), value=FALSE),
                 
                 
-                )),
+                ),
       absolutePanel(top = 100, left = 0, right = 0, fixed = FALSE,
         ggvisOutput("pvalPlot")
       )
