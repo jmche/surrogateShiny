@@ -1,16 +1,10 @@
-
-# This is the server logic for a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 library(ggvis)
 library(reshape2)
 library(Rgraphviz)
 load("tcgaResult.RData")
 surrogateTable <- read.delim("surrogate-table.txt")
+subTypeMelt <- read.delim("subtype-melted.txt")
 geneIntTable <- read.delim("geneIntTable.txt")
 noGenes <- length(table(surrogateTable$Gene))
 noSamples <- length(table(surrogateTable$Sample))
@@ -54,11 +48,13 @@ shinyServer(function(input, output, session) {
     
     g <- surrogateTable[surrogateTable$ID == x$ID,]
     
-    paste0("<b>Gene: </b>", g$Gene, "<br>",
+    paste0("<b>Click to Graph in Sidebar</b><br>",
+           "<b>Gene: </b>", g$Gene, "<br>",
            "<b>Sample: </b>",g$Sample, "<br>",
            "<b>P-value: </b>", g$pvalue, "<br>",
            "<b>Mutated Neighbors: </b>", g$neighbor, "<br>",
-           "<b>All Neighbors: </b>", g$degree)
+           "<b>All Neighbors: </b>", g$degree        
+           )
   }
   
   surrGraph_tooltip <- function(x){
@@ -103,12 +99,13 @@ shinyServer(function(input, output, session) {
           
           g <- surrogateTable[surrogateTable$ID == x$ID,]
           
-          paste0("<b>Gene: </b>", g$Gene, "<br>",
+          paste0("<b>Graph has been generated in sidebar.</b><br>",
+            "<b>Gene: </b>", g$Gene, "<br>",
                  "<b>Sample: </b>",g$Sample, "<br>",
                  "<b>P-value: </b>", g$pvalue, "<br>",
                  "<b>Mutated Neighbors: </b>", g$neighbor, "<br>",
-                 "<b>All Neighbors: </b>", g$degree,
-                 "Graph has been generated in sidebar.")
+                 "<b>All Neighbors: </b>", g$degree
+                 )
           
           #sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
           #         <img src='legend1.jpg' alt='legend' width=500></img>", outfile, g$ID)
@@ -189,7 +186,7 @@ shinyServer(function(input, output, session) {
   
   output$imageNet <- renderImage({
     list(src = svgGraph(),
-         contentType = "image/svg+xml"
+         contentType = "image/svg+xml", width= 400, height=400
          ) 
   },deleteFile=FALSE)
   

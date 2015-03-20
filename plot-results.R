@@ -1,3 +1,6 @@
+library(gplots)
+library(graph)
+library(Rgraphviz)
 
 renderSubNet <- function(NodeName, intome=intome, cellLine, 
                          fileprefix="Subnetwork", gisticCopyCalls=gisticCopyCalls, 
@@ -260,7 +263,7 @@ summarizeNetworks <- function(IDvec, intome, mutCopyFrames, surrogateTable, gene
   nodeRenderInfo(fullGraph) <- list(shape=shapeList)
   
   #color each node by degree of mutation
-  fullGraph <- layoutGraph(fullGraph, layoutType="neato")
+  fullGraph <- layoutGraph(fullGraph, layoutType="fdp")
   
   nodeRenderInfo(fullGraph) <- list(fill = nodeColorList)
   if(!is.null(fileOut)){

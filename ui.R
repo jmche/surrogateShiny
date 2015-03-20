@@ -1,16 +1,9 @@
-
-# This is the user-interface definition of a Shiny web application.
-# You can find out more about building applications with Shiny here:
-#
-# http://shiny.rstudio.com
-#
-
 library(shiny)
 library(ggvis)
 library(Rgraphviz)
 library(graph)
 library(gplots)
-file.remove("www/netgraph.svg")
+if(file.exists("www/netgraph.svg")){file.remove("www/netgraph.svg")}
 source("helper.R")
 source("plot-results.R")
 
@@ -28,43 +21,58 @@ shinyUI(fluidPage(
                           the sample.
                           (both mutations and copy number alterations). Rows also can be sorted by degree, or number of connections
                           a node has from the HPRD network.<p>
-                   For more info, mail Ted Laderas (laderast@ohsu.edu).", trigger="click", placement="bottom"),
+                   For more info, mail Ted Laderas (laderast@ohsu.edu).", trigger="click", placement="bottom"), 
          "Code is available at",  tags$a(href="https://github.com/laderast/surrogateShiny", "github.com/laderast/surrogateShiny")),
+  absolutePanel(top = 100, left = 0, right = 0, fixed = FALSE,
+                ggvisOutput("pvalPlot")
+  ),
+
+  absolutePanel(id = "netgraph", 
+                class = "panel panel-body", 
+                fixed = TRUE, 
+                #draggable = TRUE, 
+                #position= "center",
+                top = 280, left=1000, right ="auto", bottom = "auto", 
+                #style="opacity: 0.8",
+                width = 400, height = "auto",
+                
+                #if(file.exists("www/netgraph.svg")){
+                h5("Surrogate Graph (Click to Enlarge)"),
+                a(imageOutput("imageNet"), href="graphView.html", 
+                  target="_blank"),  
+                br(),
+                img(src='legend1.jpg', width=400)
+                #}
+  ),
   
   #sidebarLayout(
     absolutePanel(id = "controls", 
-                  class = "modal", 
-                  fixed = TRUE, draggable = TRUE, 
+                  class = "panel panel-body", 
+                  fixed = TRUE, 
+                  draggable = TRUE, 
                   #position= "center",
-                  top = 280, left="auto", right = 40, bottom = "auto", style="opacity: 0.8",
-                  width = 300, height = "auto",
-                
-                  h5("Surrogate Graph (Click to Enlarge)"),
-                  a(imageOutput("imageNet", width="300px", height="300px"), href="graphView.html", 
-                    target="_blank"),  
-                  br(),
-                  img(src='legend1.jpg', width=300),
+                  top = 50, left="auto", right = 10, bottom = "auto", 
+                  style="opacity: 0.8",
+                  width = 200, height = "auto",
                   
-                h5("Controls"),
-                
-                sliderInput("pvalSlider", label =h6("Alpha"),
-                  min = 0.0001, max = 0.1, value = 0.05, step = 0.01),
-                checkboxInput("mutBox", label="Show Genes With Mutations", value=FALSE),
-                selectInput("selectCols", label = h6("Order columns"), 
-                            choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
-                                           "Total Alterations (decreasing)" = 3), selected = 1),
-                selectInput("selectRows", label = h6("Order rows"), 
-                            choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
-                                           "Node Degree" = 3), 
-                            selected = 1)
+                  h5("Controls (Draggable)"),
+                  
+                  sliderInput("pvalSlider", label =h6("Alpha"),
+                              min = 0.0001, max = 0.1, value = 0.05, step = 0.01),
+                  checkboxInput("mutBox", label="Show Genes With Mutations", value=FALSE),
+                  selectInput("selectCols", label = h6("Order columns"), 
+                              choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
+                                             "Total Alterations (decreasing)" = 3), selected = 1),
+                  selectInput("selectRows", label = h6("Order rows"), 
+                              choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
+                                             "Node Degree" = 3), 
+                              selected = 1)
+                  
                 
                 #checkboxInput("clusterColumns", label=h4("Cluster Columns"), value=FALSE),
                 
                 
-                ),
-      absolutePanel(top = 100, left = 0, right = 0, fixed = FALSE,
-        ggvisOutput("pvalPlot")
-      )
+                )
     
   )
 )

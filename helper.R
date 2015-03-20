@@ -8,13 +8,13 @@ helpPopup <- function(title, content,
       )
     ),
     tags$a(
-      href = "#", class = "btn btn-mini", `data-toggle` = "popover",
+      href = "#", class = "btn", `data-toggle` = "popover",
       title = title, `data-content` = content, `data-animation` = TRUE,
       `data-html` = TRUE,
       `data-placement` = match.arg(placement, several.ok=TRUE)[1],
       `data-trigger` = match.arg(trigger, several.ok=TRUE)[1],
-      
-      tags$i(class="icon-question-sign")
+      tags$button("Surrogate Explorer Help")
+      #tags$i(class="icon-question-sign")
     )
   )
 }
