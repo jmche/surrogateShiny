@@ -122,15 +122,19 @@ renderSubNetSimple <- function(NodeName, cellLine, GeneName, intome=intome,
   library(Rgraphviz)
   library(graph)
   
+  #cellLine <- make.names(cellLine)
+  #NodeName <- make.names(NodeName)
   #grab gistic status
   if(!is.null(gisticCopyCalls)){
   cellFrame <- gisticCopyCalls[,c("GeneName", "NodeName", cellLine)]
   }
   
-  mutCopyFrame <- resultObj$mutCopyFrames[[cellLine]]
+  mutCopyFrames <- resultObj$mutCopyFrames
+  #names(mutCopyFrames) <- make.names(names(mutCopyFrames))
+  mutCopyFrame <- mutCopyFrames[[cellLine]]
   
   cellResults <- resultObj$cellResults
-  names(cellResults) <- make.names(names(cellResults))
+  #names(cellResults) <- make.names(names(cellResults))
   
   nodenet <- c(NodeName,intersect(as.character(inEdges(NodeName, intome)[[1]]), 
                                   as.character(mutCopyFrame$NodeName)))  
@@ -182,6 +186,9 @@ renderSubNetSimple <- function(NodeName, cellLine, GeneName, intome=intome,
   NodDegree <- cellRes[cellRes$NodeName ==NodeName,"degree"]
   NeighborMuts <- cellRes[cellRes$NodeName == NodeName,"neighborVec"]
   pval <- cellRes[cellRes$NodeName == NodeName, "pvalue"]
+  geneName <- strsplit(NodeName,split = "\\(")[[1]][1]
+  plotTitle <- paste(geneName, " (",cellLine," ",", p=", pval, ", n=", NeighborMuts, ", d=", NodDegree, ")", sep="")
+  graph.par(list(graph=list(main=plotTitle)))
   
   nodenetwork <- layoutGraph(nodenetwork)
   if(NeighborMuts > 0 & length(nodes(nodenetwork)) > 1){
@@ -190,11 +197,10 @@ renderSubNetSimple <- function(NodeName, cellLine, GeneName, intome=intome,
     fileOut <- paste(cellLine,"-",GeneName,".svg", sep="")
   }
   svg(height=7, width=7, filename=fileOut)
-  #plot.new()
-  #layout(matrix(c(1,2),2,1), heights=c(2,1))
+ 
   renderGraph(nodenetwork)
-  plotTitle <- paste(NodeName, " (",cellLine," ",", p=", pval, ", n=", NeighborMuts, ", d=", NodDegree, ")", sep="")
-  title(plotTitle)
+  #title(plotTitle)
+  
   #hist(distMat[,NodeName], main=plotTitle, xlab="Neighbor Mutations", ylab = "Frequency")
   dev.off()
   }  

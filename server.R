@@ -3,6 +3,7 @@ library(ggvis)
 library(reshape2)
 library(Rgraphviz)
 load("tcgaResult.RData")
+load("intome.RData")
 surrogateTable <- read.delim("surrogate-table.txt")
 subTypeMelt <- read.delim("subtype-melted.txt")
 geneIntTable <- read.delim("geneIntTable.txt")
@@ -12,7 +13,6 @@ noSamples <- length(table(surrogateTable$Sample))
 #load in precomputed column orders
 levRow <- read.delim("rowOrder.txt", stringsAsFactors=FALSE)
 levCol <- read.delim("colOrder.txt", stringsAsFactors=FALSE)
-
 
 shinyServer(function(input, output, session) {
 
@@ -48,7 +48,7 @@ shinyServer(function(input, output, session) {
     
     g <- surrogateTable[surrogateTable$ID == x$ID,]
     
-    paste0("<b>Click to Graph in Sidebar</b><br>",
+    paste0("<b>Click to Graph in Sidepanel</b><br>",
            "<b>Gene: </b>", g$Gene, "<br>",
            "<b>Sample: </b>",g$Sample, "<br>",
            "<b>P-value: </b>", g$pvalue, "<br>",
@@ -85,21 +85,28 @@ shinyServer(function(input, output, session) {
     
     #img <- paste(x$ID,".svg", sep="")
     #select the appropriate row of surrogateTable
-    g <- surrogateTable[surrogateTable$ID == x$ID,]
-    
+    g <- surrogateTable[surrogateTable$ID == as.character(x$ID),]
+    #print('this far')
     g <- g[1,]
     if(g[1,]$neighbor > 0){ 
       if(g[1,]$neighbor==1 & g[1,]$isMutated ==1){
         sprintf("%s is mutated in %s, but has no mutated neighbors.", g$Gene, g$Sample)
       }
       else{
+          #print('got to else')
           outfile <- "netgraph.svg"
           fileOut <- paste("www/", outfile, sep="")
-          plotNetGraphsFromID(g$ID, surrogateResults=tcgaResult, intome=intome,fileOut=fileOut)
+          g <- surrogateTable[surrogateTable$ID == as.character(x$ID),]
+          #print(g$ID)
+          #try(plotNetGraphsFromID(as.character(g$ID), surrogateResults=tcgaResult, intome=intome,fileOut=fileOut), silent=TRUE)
+          plotNetGraphsFromID(as.character(g$ID), surrogateResults=tcgaResult, intome=intome,fileOut=fileOut)
           
-          g <- surrogateTable[surrogateTable$ID == x$ID,]
+          #print(g)
+          #print(x)
+          #print('so far')
           
-          paste0("<b>Graph has been generated in sidebar.</b><br>",
+          
+          paste0("<b>Graph has been generated in sidepanel.</b><br>",
             "<b>Gene: </b>", g$Gene, "<br>",
                  "<b>Sample: </b>",g$Sample, "<br>",
                  "<b>P-value: </b>", g$pvalue, "<br>",
@@ -152,6 +159,7 @@ shinyServer(function(input, output, session) {
       #when clicking, display precomputed network graph
       add_tooltip(surrGraphDynamic_tooltip, "click") %>%    
       #add_tooltip(surrGraph_tooltip, "click") %>%
+      
       #brush functionality for summarizing networks
       #handle_brush(function(items, page_loc, session, ...){
       #   print(items$ID)
@@ -160,6 +168,7 @@ shinyServer(function(input, output, session) {
          #if(!is.null(val)){
          #show_tooltip(session, html="<img src='netgraph.svg' alt = 'summary graph' width = 500 height = 500></img>")}
       #}) %>%
+
       #define the sample axis
       add_axis("x", properties = axis_props(labels = list(angle = 90)), orient="top", 
                title_offset = 80, tick_padding=30) %>%
@@ -173,7 +182,7 @@ shinyServer(function(input, output, session) {
       scale_ordinal("y", padding = 0, points = FALSE, domain = domY) %>%
       #add and label 
       add_legend("fill", title="Surrogate values", values=scaleLabels) %>%
-      set_options(width= 5 * noGenes, height= 10 * noGenes)
+      set_options(width= 15 * noSamples, height= 15 * noGenes)
     
   })
   
