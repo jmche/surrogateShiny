@@ -6,6 +6,7 @@ library(gplots)
 if(file.exists("www/netgraph.svg")){file.remove("www/netgraph.svg")}
 source("helper.R")
 source("plot-results.R")
+addForBanner <- 50
 
 shinyUI(fluidPage(
   titlePanel("Surrogate Mutation Explorer for Breast Cancer Cell Lines"),
@@ -26,7 +27,7 @@ shinyUI(fluidPage(
                           a node has from the HPRD network.<p>
                    For more info, mail Ted Laderas (laderast@ohsu.edu).", trigger="click", placement="bottom") 
          )),
-  absolutePanel(top = 100, left = 0, right = 0, fixed = FALSE,
+  absolutePanel(top = 100 + addForBanner, left = 0, right = 0, fixed = FALSE,
                 ggvisOutput("pvalPlot")
   ),
 
@@ -35,7 +36,7 @@ shinyUI(fluidPage(
                 fixed = FALSE, 
                 #draggable = TRUE, 
                 #position= "center",
-                top = 280, left=765, right ="auto", bottom = "auto", 
+                top = 325 + addForBanner, left=765, right ="auto", bottom = "auto", 
                 #style="opacity: 0.8",
                 width = 500, height = "auto",
                 
@@ -54,7 +55,7 @@ shinyUI(fluidPage(
                   fixed = TRUE, 
                   draggable = TRUE, 
                   #position= "center",
-                  top = 165, left="auto", right = 10, bottom = "auto", 
+                  top = 165 +addForBanner, left="auto", right = 10, bottom = "auto", 
                   style="opacity: 0.8; background-color: lightgrey",
                   width = 250, height = "auto",
                   #tags$style("body {background-color: grey;}"),

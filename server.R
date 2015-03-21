@@ -1,11 +1,14 @@
 library(shiny)
 library(ggvis)
+library(dplyr)
 library(reshape2)
 library(Rgraphviz)
 load("tcgaResult.RData")
 load("intome.RData")
+#cutoffMat <- read.delim("cutoff-matrix.txt")
 surrogateTable <- read.delim("surrogate-table.txt")
 subTypeMelt <- read.delim("subtype-melted.txt")
+surrogateTable <- rbind(surrogateTable, subTypeMelt)
 geneIntTable <- read.delim("geneIntTable.txt")
 noGenes <- length(table(surrogateTable$Gene))
 noSamples <- length(table(surrogateTable$Sample))
@@ -27,24 +30,12 @@ shinyServer(function(input, output, session) {
                        surrogateResults, geneIntTable, fileOut)
   }
   
-  ##surrTable is a reactive version of surrogateTable
-  surrTable <- reactive({
-    #input$pvalSlider
-    pvalFilt <- ifelse(surrogateTable$pvalue < input$pvalSlider, 1, 0)
-    if(input$mutBox){
-      #add isMutated score x 2 to matrix
-      #0 = nothing, 1 = surrogate mutation, 2 = mutated, 
-      #3 = mutated + surrogate
-      pvalFilt <- pvalFilt + (surrogateTable$isMutated *2)
-      }
-    pvalFilt <- factor(pvalFilt)
-    return(data.frame(ID=surrogateTable$ID, Sample=surrogateTable$Sample, 
-                      Gene=surrogateTable$Gene, pvalFilt = pvalFilt))
-  })
+ 
   
   surrGene_tooltip <- function(x){
     if(is.null(x)) return(NULL)
     if(is.null(x$ID)) return(NULL)
+    if(x$Sample == "Subtype") return(NULL)
     
     g <- surrogateTable[surrogateTable$ID == x$ID,]
     
@@ -56,32 +47,12 @@ shinyServer(function(input, output, session) {
            "<b>All Neighbors: </b>", g$degree        
            )
   }
-  
-  surrGraph_tooltip <- function(x){
-    if(is.null(x)) return(NULL)
-    if(is.null(x$ID)) return(NULL)
-    
-    img <- paste(x$ID,".svg", sep="")
-    #select the appropriate row of surrogateTable
-    g <- surrogateTable[surrogateTable$ID == x$ID,]
-    
-    #print(g)
-    if(g[1,]$neighbor > 0){ 
-      if(g[1,]$neighbor==1 & g[1,]$isMutated ==1){
-        sprintf("%s is mutated in %s, but has no mutated neighbors.", g$Gene, g$Sample)
-      }
-      else{sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
-                   <img src='legend1.jpg' alt='legend' width=500></img>", img, x$ID)
-      }  
-       
-    }
-    else{sprintf("%s has no neighboring mutations for %s.", g$Gene, g$Sample)}
-  }
 
   
   surrGraphDynamic_tooltip <- function(x){
     if(is.null(x)) return(NULL)
     if(is.null(x$ID)) return(NULL)
+    if(x$Sample == "Subtype") return(NULL)
     
     #img <- paste(x$ID,".svg", sep="")
     #select the appropriate row of surrogateTable
@@ -93,6 +64,7 @@ shinyServer(function(input, output, session) {
         sprintf("%s is mutated in %s, but has no mutated neighbors.", g$Gene, g$Sample)
       }
       else{
+          #if(g[1,]$Sample != "Subtype"){
           #print('got to else')
           outfile <- "netgraph.svg"
           fileOut <- paste("www/", outfile, sep="")
@@ -114,6 +86,8 @@ shinyServer(function(input, output, session) {
                  "<b>All Neighbors: </b>", g$degree
                  )
           
+          #}
+          
           #sprintf("<img src='%s' alt = '%s' width = 500 height = 500></img><br>
           #         <img src='legend1.jpg' alt='legend' width=500></img>", outfile, g$ID)
       }  
@@ -129,6 +103,10 @@ shinyServer(function(input, output, session) {
     domX <- levCol[,as.numeric(input$selectCols)]
     domY <- levRow[,as.numeric(input$selectRows)]
     
+    subTypeVals <- c(-1,-2,-3,-10)
+    subTypeCols <- c("FF3333", "66CC00", "FFCC00", "000000")
+    subTypeLabs <- c("Basal A", "Basal B", "Luminal", "None")
+    
     #rs <- tapply(surrTable()$pvalFilt, surrTable()$Gene, sum)
 
     #if(input$filterBox){
@@ -141,6 +119,9 @@ shinyServer(function(input, output, session) {
                            "#FFC0CB", "#663399")
       scaleLabels <- c("Not Mutated", "Surrogate (p < alpha)", "Node Mutated", 
                        "Node Mutated + Surrogate (p < alpha)")
+      
+   
+      
     }
 
     #otherwise, just show two categories
@@ -148,8 +129,27 @@ shinyServer(function(input, output, session) {
       rangeFill <- c("#132B43", "#56B1F7")
       scaleLabels <- c("Not Mutated", "Surrogate (p < alpha)")
     }
+
+    domFill <- c(domFill, subTypeVals)
+    rangeFill <- c(rangeFill, subTypeCols)
     
-    surrTable %>% ggvis(~Sample, ~Gene, fill=~pvalFilt) %>%
+    filterByPvalue <- function(x, alpha){if(x > 0 & x < alpha){x <- 1}
+      if(x >0 & x > alpha){x <- 1} 
+      else{x <- x}
+      return(x)
+    }
+    
+#    surrogateTable %>% select(ID, Gene, Sample, isMutated, pvalue) %>%
+ #     mutate(pvalFilt = sapp
+    pvalFiltFun <-  function(pvalue, isMutated) {
+      ifelse(pvalue < input$pvalSlider, 1,0) + (input$mutBox * isMutated*2)
+    }  
+
+    #surrTable %>% 
+  surrogateTable %>% 
+      select(ID, Gene, Sample, pvalue, isMutated) %>% 
+      mutate(pvalFilt = factor(ifelse(pvalue < 0, pvalue, pvalFiltFun(pvalue, isMutated)))) %>%
+      ggvis(~Sample, ~Gene, fill=~pvalFilt) %>%
       #make the pvalue heatmap by calling layer_rects
       #note that each box has a key that corresponds to ID
       #in surrTable
@@ -181,8 +181,9 @@ shinyServer(function(input, output, session) {
       #define which genes to show and in what order using domY
       scale_ordinal("y", padding = 0, points = FALSE, domain = domY) %>%
       #add and label 
-      add_legend("fill", title="Surrogate values", values=scaleLabels) %>%
-      set_options(width= 15 * noSamples, height= 15 * noGenes)
+      add_legend("fill", title="Surrogate values", values=c(scaleLabels,subTypeLabs)) %>%
+      #add_legend("fill", title="PAM50 Subtypes", values=subTypeLabs) %>%
+      set_options(width= 15 * (noSamples), height= 10 * (noGenes +1))
     
   })
   
