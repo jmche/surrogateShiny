@@ -3,7 +3,7 @@ library(ggvis)
 library(Rgraphviz)
 library(graph)
 library(gplots)
-if(file.exists("www/netgraph.svg")){file.remove("www/netgraph.svg")}
+#if(file.exists("www/netgraph.svg")){file.remove("www/netgraph.svg")}
 source("helper.R")
 source("plot-results.R")
 addForBanner <- 50
@@ -12,7 +12,7 @@ shinyUI(fluidPage(
   titlePanel("Surrogate Mutation Explorer for Breast Cancer Cell Lines"),
 
   tags$p(
-    "Code is available at",  tags$a(href="https://github.com/laderast/surrogateShiny", "github.com/laderast/surrogateShiny", 
+    "Code is available at", tags$a(href="https://github.com/laderast/surrogateShiny", "github.com/laderast/surrogateShiny", 
                                     tags$br(),
           helpPopup(title="Surrogate Explorer Help",content = "<p>The control box is draggable if it gets in the way.
                           <p>Use the slider to adjust the alpha cutoff. <p>
@@ -38,12 +38,15 @@ shinyUI(fluidPage(
                 #position= "center",
                 top = 325 + addForBanner, left=765, right ="auto", bottom = "auto", 
                 #style="opacity: 0.8",
-                width = 500, height = "auto",
+                width = 525, height = 700,
                 
                 #if(file.exists("www/netgraph.svg")){
                 h5("Surrogate Graph (Click to Enlarge)"),
                 a(imageOutput("imageNet"), href="graphView.html", 
-                  target="_blank"),  
+                  target="_blank", width="500px", height="500px"),  
+                br(),
+                br(),
+                br(),
                 br(),
                 img(src='legend1.jpg', width=400)
                 #}
