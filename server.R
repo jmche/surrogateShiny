@@ -96,9 +96,9 @@ surrPlot <- reactive({
     domX <- levCol[,as.numeric(input$selectCols)]
     domY <- levRow[,as.numeric(input$selectRows)]
     
-    subTypeVals <- c(-1,-2,-3,-10) 
+    subTypeVals <- c(-1,-2,-3,-4) 
     subTypeCols <- c("FF3333", "66CC00", "FFCC00", "000000")
-    subTypeLabs <- c("Basal A", "Basal B", "Luminal", "No Subtype")
+    subTypeLabs <- c("Normal-like", "Basal", "Luminal", "Claudin-low")
     
     #rs <- tapply(surrTable()$pvalFilt, surrTable()$Gene, sum)
     domFill <- c(0,1)

@@ -70,7 +70,7 @@ shinyUI(fluidPage(
                   checkboxInput("mutBox", label="Show Genes With Mutations", value=FALSE),
                   selectInput("selectCols", label = h6("Order columns"), 
                               choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
-                                             "Total Alterations (decreasing)" = 3), selected = 2),
+                                             "Total Alterations (decreasing)" = 3, "Subtype" =4), selected = 2),
                   selectInput("selectRows", label = h6("Order rows"), 
                               choices = list("Alphabetical" = 1, "Clustering (pval < 0.05)" = 2,
                                              "Node Degree" = 3), 
